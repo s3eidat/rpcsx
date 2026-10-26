@@ -31,9 +31,9 @@ struct Uio {
   UioRw rw;
   void *td;
 
-  ErrorCode write(const void *data, std::size_t size) {
-    auto pos = reinterpret_cast<const std::byte *>(data);
-    auto end = pos + size;
+  ErrorCode write(std::span<const std::byte> data) {
+    auto pos = data.data();
+    auto end = pos + data.size();
 
     for (auto vec : std::span(iov, iovcnt)) {
       if (pos >= end) {
@@ -47,6 +47,10 @@ struct Uio {
     }
 
     return {};
+  }
+
+  ErrorCode write(const void *data, std::size_t size) {
+    return write({static_cast<const std::byte *>(data), size});
   }
 
   template <typename T> ErrorCode write(const T &object) {

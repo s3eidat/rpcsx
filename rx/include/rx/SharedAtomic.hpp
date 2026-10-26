@@ -3,6 +3,7 @@
 #include "asm.hpp"
 #include <atomic>
 #include <chrono>
+#include <concepts>
 #include <cstdint>
 #include <functional>
 #include <limits>
@@ -82,7 +83,9 @@ struct shared_atomic32 : std::atomic<std::uint32_t> {
     return wait_impl(oldValue);
   }
 
-  auto wait(auto &fn) -> decltype(fn(std::declval<std::uint32_t &>())) {
+  template <typename Fn>
+    requires std::predicate<Fn &, std::uint32_t &>
+  void wait(Fn &fn) {
     while (true) {
       std::uint32_t lastValue;
       if (try_spin_wait([&] {
